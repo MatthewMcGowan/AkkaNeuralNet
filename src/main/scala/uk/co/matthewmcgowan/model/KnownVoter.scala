@@ -8,7 +8,7 @@ import uk.co.matthewmcgowan.model.types.Sex.Sex
   * Created by Matt on 02/04/2017.
   */
 case class KnownVoter(sex: Sex,
-                      age: Int,
+                      age: Double,
                       location: Location,
                       income: Double,
                       politicalInclination: PoliticalInclination)

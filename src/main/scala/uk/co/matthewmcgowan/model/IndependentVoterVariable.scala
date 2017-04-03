@@ -12,5 +12,5 @@ trait IndependentVoterVariable {
   val location: Location
   val income: Double
 
-  type Age = Int
+  type Age = Double
 }
