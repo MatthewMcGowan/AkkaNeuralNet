@@ -58,6 +58,7 @@ class AgeIncomePerceptronActorSpec extends TestKit(ActorSystem("AgeIncomePercept
       }
     }
 
+    // Linear seperability where line has positive gradient
     describe("when trained with a strong positive correlation between Income and Conservatism") {
       it("should predict Conservative for a high Income") {
         val ref = TestActorRef(new AgeIncomePerceptronActor)
