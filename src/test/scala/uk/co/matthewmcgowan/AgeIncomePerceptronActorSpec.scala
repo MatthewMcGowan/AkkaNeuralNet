@@ -14,11 +14,31 @@ import scala.util.Random
 class AgeIncomePerceptronActorSpec extends TestKit(ActorSystem("AgeIncomePerceptronActorSpec")) with ImplicitSender
   with FunSpecLike with Matchers with BeforeAndAfterAll {
   describe("An AgeIncomePerceptronActor") {
-    describe("when trained with a strong positive correlation") {
-      describe("between Age and Conservatism") {
+    describe("when trained with a strong positive correlation between Age and Conservatism") {
+      it("should predict Conservative for a high Age") {
+        val ref = TestActorRef(new AgeIncomePerceptronActor)
+        sendToRefShuffled(oldConservativeData, ref, 200)
+
+        val m = UnknownVoter(Sex.Male, 1, Location.Rural, 0.5)
+        ref ! m
+
+        expectMsg((m, PoliticalInclination.Conservative))
+      }
+
+      it("should predict Liberal for a low Age") {
+        val ref = TestActorRef(new AgeIncomePerceptronActor)
+        sendToRefShuffled(oldConservativeData, ref, 200)
+
+        val m = UnknownVoter(Sex.Male, 0, Location.Rural, 0.5)
+        ref ! m
+
+        expectMsg((m, PoliticalInclination.Liberal))
+      }
+
+      describe("and a strong negative correlation between Income and Conservatism") {
         it("should predict Conservative for a high Age") {
           val ref = TestActorRef(new AgeIncomePerceptronActor)
-          sendToRefShuffled(oldConservativeData, ref, 200)
+          sendToRefShuffled(oldConservativeData ++ lowIncomeConservativeData, ref, 200)
 
           val m = UnknownVoter(Sex.Male, 1, Location.Rural, 0.5)
           ref ! m
@@ -26,37 +46,37 @@ class AgeIncomePerceptronActorSpec extends TestKit(ActorSystem("AgeIncomePercept
           expectMsg((m, PoliticalInclination.Conservative))
         }
 
-        it("should predict Liberal for a low Age") {
+        it("should predict Conservative for a low Income") {
           val ref = TestActorRef(new AgeIncomePerceptronActor)
-          sendToRefShuffled(oldConservativeData, ref, 200)
-
-          val m = UnknownVoter(Sex.Male, 0, Location.Rural, 0.5)
-          ref ! m
-
-          expectMsg((m, PoliticalInclination.Liberal))
-        }
-      }
-
-      describe("between Income and Conservatism") {
-        it("should predict Conservative for a high Income") {
-          val ref = TestActorRef(new AgeIncomePerceptronActor)
-          sendToRefShuffled(richConservativeData, ref, 200)
-
-          val m = UnknownVoter(Sex.Male, 0.5, Location.Rural, 1)
-          ref ! m
-
-          expectMsg((m, PoliticalInclination.Conservative))
-        }
-
-        it("should predict Liberal for a low Income") {
-          val ref = TestActorRef(new AgeIncomePerceptronActor)
-          sendToRefShuffled(richConservativeData, ref, 200)
+          sendToRefShuffled(oldConservativeData ++ lowIncomeConservativeData, ref, 200)
 
           val m = UnknownVoter(Sex.Male, 0.5, Location.Rural, 0)
           ref ! m
 
-          expectMsg((m, PoliticalInclination.Liberal))
+          expectMsg((m, PoliticalInclination.Conservative))
         }
+      }
+    }
+
+    describe("when trained with a strong positive correlation between Income and Conservatism") {
+      it("should predict Conservative for a high Income") {
+        val ref = TestActorRef(new AgeIncomePerceptronActor)
+        sendToRefShuffled(highIncomeConservativeData, ref, 200)
+
+        val m = UnknownVoter(Sex.Male, 0.5, Location.Rural, 1)
+        ref ! m
+
+        expectMsg((m, PoliticalInclination.Conservative))
+      }
+
+      it("should predict Liberal for a low Income") {
+        val ref = TestActorRef(new AgeIncomePerceptronActor)
+        sendToRefShuffled(highIncomeConservativeData, ref, 200)
+
+        val m = UnknownVoter(Sex.Male, 0.5, Location.Rural, 0)
+        ref ! m
+
+        expectMsg((m, PoliticalInclination.Liberal))
       }
     }
 
@@ -84,9 +104,13 @@ class AgeIncomePerceptronActorSpec extends TestKit(ActorSystem("AgeIncomePercept
     KnownVoter(Sex.Male, 0, Location.Rural, 0.5, PoliticalInclination.Conservative),
     KnownVoter(Sex.Male, 1, Location.Rural, 0.5, PoliticalInclination.Liberal))
 
-  val richConservativeData: List[KnownVoter] = List(
+  val highIncomeConservativeData: List[KnownVoter] = List(
     KnownVoter(Sex.Male, 0.5, Location.Rural, 1, PoliticalInclination.Conservative),
     KnownVoter(Sex.Male, 0.5, Location.Rural, 0, PoliticalInclination.Liberal))
+
+  val lowIncomeConservativeData: List[KnownVoter] = List(
+    KnownVoter(Sex.Male, 0.5, Location.Rural, 0, PoliticalInclination.Conservative),
+    KnownVoter(Sex.Male, 0.5, Location.Rural, 1, PoliticalInclination.Liberal))
 
   private def sendToRefShuffled(l: List[KnownVoter], ref: ActorRef, n: Int = 1): Unit = {
     val ext = List.fill(n)(l).flatten
